@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card panel-card p-4">
+    <h3 class="mb-3">Payments</h3>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>User</th><th>Project</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.user.username }}</td>
+                    <td>{{ payment.user_project.project.title }}</td>
+                    <td>{{ payment.get_type_display }}</td>
+                    <td>Rs. {{ payment.amount }}</td>
+                    <td>{{ payment.get_status_display }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

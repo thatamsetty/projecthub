@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card panel-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">{{ user_project.project.title }}</h2>
+        <span class="status-pill status-{{ user_project.status }}">{{ user_project.get_status_display }}</span>
+    </div>
+    <p><strong>Tech Stack:</strong> {{ user_project.project.tech_stack }}</p>
+    <p><strong>Description:</strong> {{ user_project.custom_description }}</p>
+    <p><strong>Effective Price:</strong> Rs. {{ user_project.effective_price }}</p>
+    <div class="progress mb-3">
+        <div class="progress-bar" style="width: {{ user_project.progress }}%;">{{ user_project.progress }}%</div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4"><div class="border rounded p-3">Advance: {% if user_project.payment_summary.advance_paid %}Paid{% else %}Pending{% endif %}</div></div>
+        <div class="col-md-4"><div class="border rounded p-3">Final: {% if user_project.payment_summary.final_paid %}Paid{% else %}Pending{% endif %}</div></div>
+        <div class="col-md-4"><div class="border rounded p-3">Delivery: {% if user_project.delivery_url %}Uploaded{% else %}Pending{% endif %}</div></div>
+    </div>
+</div>
+{% endblock %}

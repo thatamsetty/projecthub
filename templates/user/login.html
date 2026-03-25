@@ -1,0 +1,48 @@
+{% extends 'auth_base.html' %}
+{% block title %}User Login | ProjectHub{% endblock %}
+{% block auth_content %}
+<section class="auth-card auth-card-compact">
+    <div class="auth-card-header">
+        <h1>Login</h1>
+        <p>Sign in to continue to your ProjectHub account.</p>
+        <div class="auth-progress">
+            <span></span>
+        </div>
+    </div>
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger auth-alert">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+    {% endif %}
+    <form method="post" class="auth-form-grid">
+        {% csrf_token %}
+        <label class="auth-field">
+            <span>Email</span>
+            <div class="auth-input-wrap">
+                <span class="auth-input-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2v.2l8 5.2 8-5.2V8l-8 5.2L4 8Z"></path>
+                    </svg>
+                </span>
+                {{ form.username }}
+            </div>
+            {% for error in form.username.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
+        </label>
+        <label class="auth-field">
+            <span>Password</span>
+            <div class="auth-input-wrap">
+                <span class="auth-input-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 1 1 4 0v2Z"></path>
+                    </svg>
+                </span>
+                {{ form.password }}
+            </div>
+            {% for error in form.password.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
+        </label>
+        <button class="auth-submit-btn" type="submit">Login <span aria-hidden="true">&rarr;</span></button>
+    </form>
+    <p class="auth-inline-link"><a href="#">Forgot Password?</a></p>
+    <p class="auth-switch-copy">Don't have an account? <a href="/auth/register/">Sign Up</a></p>
+</section>
+{% endblock %}

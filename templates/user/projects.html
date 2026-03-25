@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Project Catalog</h2>
+        <p class="text-muted mb-0">Browse production-ready final year project offerings.</p>
+    </div>
+    <a class="btn btn-dark" href="/submit/">Submit Custom Request</a>
+</div>
+<div class="row g-4">
+    {% for project in catalog %}
+        <div class="col-lg-4">
+            <div class="card h-100 dashboard-card p-3">
+                <h5>{{ project.title }}</h5>
+                <p class="text-muted">{{ project.description|truncatechars:120 }}</p>
+                <p><strong>Stack:</strong> {{ project.tech_stack }}</p>
+                <p><strong>Base Price:</strong> Rs. {{ project.base_price }}</p>
+                <a href="/projects/{{ project.id }}/" class="btn btn-outline-dark">View</a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

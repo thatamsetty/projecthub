@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card panel-card p-4">
+    <h3 class="mb-3">Users and Project Lifecycle</h3>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>User</th><th>Project</th><th>Status</th><th>Progress</th><th>Custom Price</th><th></th></tr></thead>
+            <tbody>
+            {% for user_project in user_projects %}
+                <tr>
+                    <td>{{ user_project.user.username }}</td>
+                    <td>{{ user_project.project.title }}</td>
+                    <td>{{ user_project.get_status_display }}</td>
+                    <td>{{ user_project.progress }}%</td>
+                    <td>{{ user_project.custom_price|default:'-' }}</td>
+                    <td><a href="/admin/users/projects/{{ user_project.id }}/edit/" class="btn btn-sm btn-outline-dark">Manage</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

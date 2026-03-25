@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card panel-card p-4">
+            <h3 class="mb-3">Add Catalog Item</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-dark">Save</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card panel-card p-4">
+            <h3 class="mb-3">Catalog</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr><th>Title</th><th>Stack</th><th>Price</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                    {% for project in catalog_items %}
+                        <tr>
+                            <td>{{ project.title }}</td>
+                            <td>{{ project.tech_stack }}</td>
+                            <td>Rs. {{ project.base_price }}</td>
+                            <td>{% if project.is_active %}Active{% else %}Inactive{% endif %}</td>
+                            <td><a href="/admin/projects/{{ project.id }}/edit/" class="btn btn-sm btn-outline-dark">Edit</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
