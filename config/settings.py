@@ -76,9 +76,11 @@ ASGI_APPLICATION = 'config.asgi.application'
 
 database_url = os.environ.get("DATABASE_URL", "").strip()
 if not database_url:
-    raise RuntimeError("DATABASE_URL must be set for MySQL deployment.")
+    raise RuntimeError("DATABASE_URL must be set for deployment.")
 
-database_host = (urlparse(database_url).hostname or "").strip().lower()
+parsed_database_url = urlparse(database_url)
+database_host = (parsed_database_url.hostname or "").strip().lower()
+database_scheme = (parsed_database_url.scheme or "").strip().lower()
 if os.getenv("RENDER") == "true" and database_host in {"127.0.0.1", "localhost"}:
     raise RuntimeError(
         "Render cannot connect to a local database at 127.0.0.1 or localhost. "
@@ -89,7 +91,7 @@ DATABASES = {
     'default': dj_database_url.parse(
         database_url,
         conn_max_age=600,
-        ssl_require=database_url.startswith('postgres://'),
+        ssl_require=database_scheme in {'postgres', 'postgresql'},
     )
 }
 
