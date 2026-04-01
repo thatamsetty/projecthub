@@ -1,33 +1,74 @@
 {% extends 'base.html' %}
+{% block title %}Payments | ProjectHub{% endblock %}
+{% block page_title %}Payments{% endblock %}
 {% block content %}
-<div class="card panel-card p-4">
-    <h2 class="mb-3">Payments</h2>
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Project</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Order ID</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for payment in payment_rows %}
-                <tr>
-                    <td>{{ payment.user_project.project.title }}</td>
-                    <td>{{ payment.get_type_display }}</td>
-                    <td>Rs. {{ payment.amount }}</td>
-                    <td>{{ payment.get_status_display }}</td>
-                    <td>{{ payment.razorpay_order_id|default:'-' }}</td>
-                </tr>
-            {% empty %}
-                <tr><td colspan="5" class="text-center text-muted">No payments created yet.</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
+<section class="manual-payment-shell">
+    <div class="manual-payment-header card panel-card p-4 p-lg-5">
+        <div>
+            <span class="eyebrow">Manual Payments</span>
+            <h1 class="manual-payment-title">Track every stage payment in one place.</h1>
+            <p class="manual-payment-copy mb-0">As your project reaches each progress milestone, the matching installment opens here for payment and screenshot upload.</p>
+        </div>
     </div>
-    <p class="text-muted small mb-0">Razorpay key configured: {% if razorpay_key_id %}Yes{% else %}No, mock mode enabled{% endif %}</p>
-</div>
+
+    <div class="row g-4 mt-1">
+        {% for payment in payment_rows %}
+            <div class="col-lg-12">
+                <article class="card panel-card payment-overview-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <div class="small text-uppercase text-muted fw-semibold">{{ payment.get_stage_display }}</div>
+                                <h3 class="h4 mb-1">{{ payment.user_project.project.title }}</h3>
+                                <p class="text-muted mb-0">Amount: Rs. {{ payment.amount }}</p>
+                            </div>
+                            <span class="status-pill payment-state-{{ payment.status }}">{{ payment.get_status_display }}</span>
+                        </div>
+
+                        <div class="manual-payment-facts">
+                            <div>
+                                <span>Workflow status</span>
+                                <strong>{{ payment.user_project.get_status_display }}</strong>
+                            </div>
+                            <div>
+                                <span>Requested</span>
+                                <strong>{{ payment.requested_at|date:"M d, Y h:i A" }}</strong>
+                            </div>
+                            <div>
+                                <span>Proof uploaded</span>
+                                <strong>{{ payment.proof_uploaded_at|date:"M d, Y h:i A"|default:"Not uploaded" }}</strong>
+                            </div>
+                            <div>
+                                <span>Verified</span>
+                                <strong>{{ payment.paid_at|date:"M d, Y h:i A"|default:"Pending admin review" }}</strong>
+                            </div>
+                        </div>
+
+                        {% if payment.payment_note %}
+                            <div class="payment-note mt-3">
+                                <strong>User note</strong>
+                                <p class="mb-0">{{ payment.payment_note }}</p>
+                            </div>
+                        {% endif %}
+
+                        {% if payment.status == 'requested' and payment.user_project.payment_requested_for_stage == payment.stage %}
+                            <a class="btn btn-dark mt-4" href="/payments/{{ payment.user_project.id }}/stage/{{ payment.stage }}/">Pay Now</a>
+                        {% elif payment.status == 'verification' %}
+                            <a class="btn btn-outline-dark mt-4" href="/payments/{{ payment.user_project.id }}/stage/{{ payment.stage }}/">View submission</a>
+                        {% else %}
+                            <a class="btn btn-outline-dark mt-4" href="/dashboard/projects/{{ payment.user_project.id }}/">Open project</a>
+                        {% endif %}
+                    </div>
+                </article>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card panel-card p-5 text-center">
+                    <h3 class="h4">No payment requests yet</h3>
+                    <p class="text-muted mb-0">Installments will appear here automatically when your project reaches the next progress milestone.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
 {% endblock %}

@@ -1,89 +1,213 @@
 {% extends 'auth_base.html' %}
 {% block title %}Create Account | ProjectHub{% endblock %}
-{% block auth_content %}
-<section class="auth-card auth-card-wide">
-    <div class="auth-card-header">
-        <h1>Create Your Account</h1>
-        <p>Get started with ProjectHub. It is free forever.</p>
-        <div class="auth-progress">
+{% block auth_body_class %}auth-register-body{% endblock %}
+{% block auth_content_class %}auth-register-layout{% endblock %}
+{% block auth_panel %}
+<div class="register-page-shell">
+<section class="auth-card auth-card-wide register-exact-card" style="--auth-progress-width: 23%;">
+    <div class="auth-card-header register-exact-header">
+        <h1>Create your workspace</h1>
+        <p>Set up your account and start managing your projects in a production-ready environment.</p>
+        <div class="auth-progress register-exact-progress">
             <span></span>
         </div>
     </div>
+
     {% if form.non_field_errors %}
         <div class="alert alert-danger auth-alert">
             {% for error in form.non_field_errors %}{{ error }}{% endfor %}
         </div>
     {% endif %}
-    <form method="post" class="auth-form-grid">
+
+    <form method="post" class="auth-form-grid register-exact-form" id="registerForm" novalidate>
         {% csrf_token %}
-        <label class="auth-field">
+
+        <label class="auth-field register-full-span">
             <span>Username</span>
-            <div class="auth-input-wrap">
+            <div class="auth-input-wrap register-exact-input register-input-with-icon">
                 <span class="auth-input-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.87 0-7 2.24-7 5v1h14v-1c0-2.76-3.13-5-7-5Z"></path>
-                    </svg>
+                    <i class="bi bi-person"></i>
                 </span>
                 {{ form.username }}
             </div>
             {% for error in form.username.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
         </label>
-        <label class="auth-field">
-            <span>Email Address</span>
-            <div class="auth-input-wrap">
+
+        <label class="auth-field register-full-span">
+            <span>First Name</span>
+            <div class="auth-input-wrap register-exact-input register-input-with-icon">
                 <span class="auth-input-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2v.2l8 5.2 8-5.2V8l-8 5.2L4 8Z"></path>
-                    </svg>
+                    <i class="bi bi-person"></i>
+                </span>
+                {{ form.first_name }}
+            </div>
+            {% for error in form.first_name.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
+        </label>
+
+        <label class="auth-field register-full-span">
+            <span>Second Name</span>
+            <div class="auth-input-wrap register-exact-input register-input-with-icon">
+                <span class="auth-input-icon">
+                    <i class="bi bi-person"></i>
+                </span>
+                {{ form.last_name }}
+            </div>
+            {% for error in form.last_name.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
+        </label>
+
+        <label class="auth-field register-full-span">
+            <span>Email Address</span>
+            <div class="auth-input-wrap register-exact-input register-input-with-icon">
+                <span class="auth-input-icon">
+                    <i class="bi bi-at"></i>
                 </span>
                 {{ form.email }}
             </div>
             {% for error in form.email.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
         </label>
-        <label class="auth-field">
+
+        <label class="auth-field register-full-span">
             <span>Mobile Number</span>
-            <div class="auth-split-input">
-                <span class="auth-country-badge">
-                    <span class="auth-country-flag">IN</span>
-                    <span>+91</span>
+            <div class="auth-input-wrap register-exact-input register-input-with-icon">
+                <span class="auth-input-icon">
+                    <i class="bi bi-telephone"></i>
                 </span>
-                <div class="auth-input-wrap">
-                    <span class="auth-input-icon">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M17 1H7a2 2 0 0 0-2 2v18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2Zm-5 21a1.25 1.25 0 1 1 0-2.5A1.25 1.25 0 0 1 12 22Zm5-4H7V4h10Z"></path>
-                        </svg>
-                    </span>
-                    {{ form.mobile }}
-                </div>
+                {{ form.mobile }}
             </div>
             {% for error in form.mobile.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
         </label>
-        <label class="auth-field">
+
+        <label class="auth-field register-full-span">
             <span>Password</span>
-            <div class="auth-input-wrap">
+            <div class="auth-input-wrap auth-password-wrap register-exact-input register-exact-password register-input-with-icon">
                 <span class="auth-input-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 1 1 4 0v2Z"></path>
-                    </svg>
+                    <i class="bi bi-lock"></i>
                 </span>
                 {{ form.password }}
+                <button type="button" class="password-toggle-btn" data-password-toggle aria-label="Show password">
+                    <svg class="password-eye-open" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"></path>
+                    </svg>
+                    <svg class="password-eye-off" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m3 4.3 16.7 16.8-1.4 1.4-3.1-3.1A10.8 10.8 0 0 1 12 19c-6 0-10-7-10-7a19.5 19.5 0 0 1 4.5-5.3L1.6 5.7 3 4.3Zm7 7 4 4a4 4 0 0 1-4-4Zm2-6c6 0 10 6.7 10 6.7a19.4 19.4 0 0 1-5 5.4l-2.1-2.1a4 4 0 0 0-5.2-5.2L7.7 8A11.1 11.1 0 0 1 12 5.3Z"></path>
+                    </svg>
+                </button>
             </div>
             {% for error in form.password.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
+
+            <div class="register-password-strength" id="passwordStrengthMeter" data-password-meter aria-live="polite">
+                <div class="register-password-strength-bars" aria-hidden="true">
+                    <span class="register-strength-bar"></span>
+                    <span class="register-strength-bar"></span>
+                    <span class="register-strength-bar"></span>
+                    <span class="register-strength-bar"></span>
+                    <span class="register-strength-bar"></span>
+                </div>
+                <div class="register-password-strength-meta">
+                    <span id="passwordStrengthHint">Must be at least 8 characters, include numbers and symbols.</span>
+                </div>
+            </div>
         </label>
-        <label class="auth-field">
+
+        <label class="auth-field register-full-span">
             <span>Confirm Password</span>
-            <div class="auth-input-wrap">
+            <div class="auth-input-wrap auth-password-wrap register-exact-input register-exact-password register-input-with-icon">
                 <span class="auth-input-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 1 1 4 0v2Z"></path>
-                    </svg>
+                    <i class="bi bi-lock"></i>
                 </span>
                 {{ form.confirm_password }}
+                <button type="button" class="password-toggle-btn" data-password-toggle aria-label="Show password">
+                    <svg class="password-eye-open" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"></path>
+                    </svg>
+                    <svg class="password-eye-off" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m3 4.3 16.7 16.8-1.4 1.4-3.1-3.1A10.8 10.8 0 0 1 12 19c-6 0-10-7-10-7a19.5 19.5 0 0 1 4.5-5.3L1.6 5.7 3 4.3Zm7 7 4 4a4 4 0 0 1-4-4Zm2-6c6 0 10 6.7 10 6.7a19.4 19.4 0 0 1-5 5.4l-2.1-2.1a4 4 0 0 0-5.2-5.2L7.7 8A11.1 11.1 0 0 1 12 5.3Z"></path>
+                    </svg>
+                </button>
             </div>
             {% for error in form.confirm_password.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
         </label>
-        <button class="auth-submit-btn" type="submit">Send OTP <span aria-hidden="true">&rarr;</span></button>
+
+        <button class="auth-submit-btn register-exact-submit register-full-span" type="submit">Create Account</button>
     </form>
-    <p class="auth-switch-copy">Already have an account? <a href="/auth/login/">Sign in</a></p>
+
+    <p class="register-exact-switch-copy">Already have an account? <a href="/auth/login/">Sign in</a></p>
 </section>
+</div>
+{% endblock %}
+
+{% block extra_auth_scripts %}
+<script>
+    (function () {
+        var passwordInput = document.getElementById('id_password');
+        var meter = document.getElementById('passwordStrengthMeter');
+        var strengthHint = document.getElementById('passwordStrengthHint');
+
+        if (!passwordInput || !meter || !strengthHint) {
+            return;
+        }
+
+        var bars = Array.prototype.slice.call(meter.querySelectorAll('.register-strength-bar'));
+
+        function getStrength(password) {
+            var checks = {
+                length: password.length >= 8,
+                lower: /[a-z]/.test(password),
+                upper: /[A-Z]/.test(password),
+                digit: /\d/.test(password),
+                symbol: /[^A-Za-z0-9]/.test(password)
+            };
+
+            var score = 0;
+            Object.keys(checks).forEach(function (key) {
+                if (checks[key]) {
+                    score += 1;
+                }
+            });
+
+            if (!password.length) {
+                return {
+                    level: 'empty',
+                    activeBars: 0,
+                    hint: 'Must be at least 8 characters, include numbers and symbols.'
+                };
+            }
+
+            if (score <= 2) {
+                return {
+                    level: 'low',
+                    activeBars: Math.max(1, score),
+                    hint: 'Add uppercase letters, numbers, and symbols to strengthen it.'
+                };
+            }
+
+            if (score === 3 || (score === 4 && !checks.length)) {
+                return {
+                    level: 'medium',
+                    activeBars: 3,
+                    hint: 'Good start. Make it longer and mix upper, lower, numbers, and symbols.'
+                };
+            }
+
+            return {
+                level: 'strong',
+                activeBars: 5,
+                hint: 'Strong password. You are using a solid mix of characters.'
+            };
+        }
+
+        function renderStrength() {
+            var result = getStrength(passwordInput.value);
+            meter.setAttribute('data-strength', result.level);
+            strengthHint.textContent = result.hint;
+
+            bars.forEach(function (bar, index) {
+                bar.classList.toggle('is-active', index < result.activeBars);
+            });
+        }
+
+        passwordInput.addEventListener('input', renderStrength);
+        renderStrength();
+    })();
+</script>
 {% endblock %}

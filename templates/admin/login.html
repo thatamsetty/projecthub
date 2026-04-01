@@ -1,11 +1,13 @@
 {% extends 'auth_base.html' %}
 {% block title %}Admin Login | ProjectHub{% endblock %}
+{% block auth_body_class %}auth-login-body auth-admin-login-body{% endblock %}
+{% block auth_content_class %}auth-login-layout{% endblock %}
 {% block auth_content %}
-<section class="auth-card auth-card-compact">
-    <div class="auth-card-header">
-        <h1>Admin Login</h1>
-        <p>Sign in to manage ProjectHub.</p>
-        <div class="auth-progress">
+<section class="auth-card auth-card-compact login-exact-card" style="--auth-progress-width: 54%;">
+    <div class="auth-card-header login-exact-header">
+        <h1>Welcome back</h1>
+        <p>Sign in to continue managing projects, payments, updates, and downloads with a polished client workspace.</p>
+        <div class="auth-progress login-exact-progress">
             <span></span>
         </div>
     </div>
@@ -14,15 +16,13 @@
             {% for error in form.non_field_errors %}{{ error }}{% endfor %}
         </div>
     {% endif %}
-    <form method="post" class="auth-form-grid">
+    <form method="post" class="auth-form-grid login-exact-form auth-exact-form">
         {% csrf_token %}
         <label class="auth-field">
-            <span>Email</span>
-            <div class="auth-input-wrap">
+            <span>Username</span>
+            <div class="auth-input-wrap login-exact-input auth-exact-input login-input-with-icon auth-input-with-icon">
                 <span class="auth-input-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2v.2l8 5.2 8-5.2V8l-8 5.2L4 8Z"></path>
-                    </svg>
+                    <i class="bi bi-person"></i>
                 </span>
                 {{ form.username }}
             </div>
@@ -30,19 +30,25 @@
         </label>
         <label class="auth-field">
             <span>Password</span>
-            <div class="auth-input-wrap">
+            <div class="auth-input-wrap auth-password-wrap login-exact-input auth-exact-input login-exact-password auth-exact-password login-input-with-icon auth-input-with-icon">
                 <span class="auth-input-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 1 1 4 0v2Z"></path>
-                    </svg>
+                    <i class="bi bi-lock"></i>
                 </span>
                 {{ form.password }}
+                <button type="button" class="password-toggle-btn" data-password-toggle aria-label="Show password">
+                    <svg class="password-eye-open" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"></path>
+                    </svg>
+                    <svg class="password-eye-off" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m3 4.3 16.7 16.8-1.4 1.4-3.1-3.1A10.8 10.8 0 0 1 12 19c-6 0-10-7-10-7a19.5 19.5 0 0 1 4.5-5.3L1.6 5.7 3 4.3Zm7 7 4 4a4 4 0 0 1-4-4Zm2-6c6 0 10 6.7 10 6.7a19.4 19.4 0 0 1-5 5.4l-2.1-2.1a4 4 0 0 0-5.2-5.2L7.7 8A11.1 11.1 0 0 1 12 5.3Z"></path>
+                    </svg>
+                </button>
             </div>
             {% for error in form.password.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
         </label>
-        <button class="auth-submit-btn" type="submit">Admin Login <span aria-hidden="true">&rarr;</span></button>
+        <button class="auth-submit-btn login-exact-submit" type="submit">Login <span aria-hidden="true">&rarr;</span></button>
     </form>
-    <p class="auth-inline-link"><a href="/auth/login/">Back to user login</a></p>
-    <p class="auth-switch-copy">Need a normal account? <a href="/auth/login/">User Sign In</a></p>
+    <p class="auth-inline-link login-exact-forgot"><a href="/admin-auth/forgot-password/">Forgot password?</a></p>
+    <p class="auth-switch-copy login-exact-switch">Need a normal account? <a href="/auth/login/">User Sign In</a></p>
 </section>
 {% endblock %}

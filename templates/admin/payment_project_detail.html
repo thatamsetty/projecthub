@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block title %}Project Payment Detail | ProjectHub{% endblock %}
+{% block app_main_class %}app-main app-main-tight{% endblock %}
+{% block topbar %}{% endblock %}
+{% block content %}
+<section class="payment-review-shell">
+    <div class="card panel-card payment-review-header p-4 p-lg-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <span class="eyebrow">Project Payment Detail</span>
+                <h2 class="manual-payment-title mb-1">{{ user_project.project.title }}</h2>
+                <p class="manual-payment-copy mb-0">Client: {{ user_project.user.username }}</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="/admin/payments/users/{{ user_project.user.id }}/" class="btn btn-outline-dark">Back to Projects</a>
+                {% if can_download_invoice %}
+                    <a href="/admin/payments/projects/{{ user_project.id }}/invoice/" class="btn btn-outline-dark">Download Invoice</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-4 payment-summary-col">
+            <article class="card panel-card payment-summary-card">
+                <div class="card-body p-4">
+                    <h3 class="payment-section-title">Payment Summary</h3>
+                    <div class="manual-payment-facts payment-kpi-grid">
+                        <div><span>Total Amount</span><strong>Rs. {{ total_amount }}</strong></div>
+                        <div><span>Paid</span><strong>Rs. {{ paid_amount }}</strong></div>
+                        <div><span>Pending</span><strong>Rs. {{ pending_amount }}</strong></div>
+                        <div><span>Overdue Stages</span><strong>{{ overdue_count }}</strong></div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between small text-muted mb-2">
+                            <span>Overall Payment Progress</span>
+                            <strong>{{ paid_percent }}%</strong>
+                        </div>
+                        <div class="progress-hero">
+                            <div class="progress-bar" role="progressbar" style="width: {{ paid_percent }}%;" aria-valuenow="{{ paid_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="auto_reminder">
+                        <button type="submit" class="btn btn-outline-dark w-100">Auto Reminder</button>
+                    </form>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-lg-8">
+            <article class="card panel-card">
+                <div class="card-body p-4 p-lg-5">
+                    <h3 class="payment-section-title">Payment Timeline (Milestones)</h3>
+                    <div class="stage-list">
+                        {% for row in stage_rows %}
+                            <div class="stage-card stage-card-{{ row.status }} stage-card-compact">
+                                <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+                                    <div>
+                                        <div class="small text-uppercase text-muted fw-semibold stage-label-mini">{{ row.label }}</div>
+                                        <h4 class="h6 mb-0 stage-amount-mini">Rs. {{ row.amount }}</h4>
+                                    </div>
+                                    <span class="status-pill stage-status-{{ row.status }} stage-pill-mini">{{ row.status_label }}</span>
+                                </div>
+
+                                <div class="stage-meta-grid">
+                                    <div>
+                                        <span>Amount</span>
+                                        <strong>Rs. {{ row.amount }}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Status</span>
+                                        <strong>{% if row.payment %}{{ row.payment.get_status_display }}{% else %}-{% endif %}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Updated</span>
+                                        <strong>
+                                            {% if row.payment and row.payment.reviewed_at %}
+                                                {{ row.payment.reviewed_at|date:"M d, Y h:i A" }}
+                                            {% elif row.payment %}
+                                                {{ row.payment.requested_at|date:"M d, Y h:i A" }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div class="mt-2 stage-proof-wrap">
+                                    <span class="small text-uppercase text-muted fw-semibold">Payment Proof</span>
+                                    {% if row.payment and row.payment.payment_proof %}
+                                        <div class="stage-proof-link-wrap mt-2">
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-dark stage-proof-view-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#proofPreviewModal"
+                                                data-proof-url="{{ row.payment.payment_proof.url }}"
+                                                data-proof-label="{{ user_project.project.title }} - {{ row.label }}"
+                                            >
+                                                View Proof
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <div class="status-locked-box mt-2">
+                                            <p class="mb-0">No payment proof uploaded.</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="stage-actions mt-2">
+                                    {% if row.can_approve_reject %}
+                                        <div class="stage-actions-grid">
+                                            <form method="post" class="stage-action-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="approve_payment">
+                                                <input type="hidden" name="payment_id" value="{{ row.payment.id }}">
+                                                <textarea name="review_note" rows="2" class="form-control" placeholder="Optional approval note"></textarea>
+                                                <button type="submit" class="btn btn-dark w-100">Approve Payment</button>
+                                            </form>
+                                            <form method="post" class="stage-action-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="reject_payment">
+                                                <input type="hidden" name="payment_id" value="{{ row.payment.id }}">
+                                                <textarea name="review_note" rows="2" class="form-control" placeholder="Reason for rejection" required></textarea>
+                                                <button type="submit" class="btn btn-outline-danger w-100">Reject Payment</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if row.can_send_reminder %}
+                                        <form method="post" class="stage-action-form stage-action-reminder">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="send_reminder">
+                                            <input type="hidden" name="payment_id" value="{{ row.payment.id }}">
+                                            <textarea name="review_note" rows="2" class="form-control" placeholder="Optional reminder note"></textarea>
+                                            <button type="submit" class="btn btn-outline-dark w-100">Send Reminder</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <div class="modal fade" id="proofPreviewModal" tabindex="-1" aria-labelledby="proofPreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content proof-modal-content">
+                <div class="modal-header proof-modal-header">
+                    <h5 class="modal-title" id="proofPreviewModalLabel">Payment Proof</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body proof-modal-body">
+                    <img id="proofPreviewImage" src="" alt="Payment proof preview" class="proof-modal-image">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    (function () {
+        const proofModal = document.getElementById('proofPreviewModal');
+        if (!proofModal) return;
+
+        proofModal.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            if (!trigger) return;
+
+            const proofUrl = trigger.getAttribute('data-proof-url') || '';
+            const proofLabel = trigger.getAttribute('data-proof-label') || 'Payment Proof';
+            const modalTitle = proofModal.querySelector('#proofPreviewModalLabel');
+            const modalImage = proofModal.querySelector('#proofPreviewImage');
+
+            modalTitle.textContent = proofLabel;
+            modalImage.src = proofUrl;
+            modalImage.alt = proofLabel;
+        });
+
+        proofModal.addEventListener('hidden.bs.modal', function () {
+            const modalImage = proofModal.querySelector('#proofPreviewImage');
+            modalImage.src = '';
+            modalImage.alt = 'Payment proof preview';
+        });
+    })();
+</script>
+{% endblock %}

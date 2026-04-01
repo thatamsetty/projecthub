@@ -1,22 +1,75 @@
 {% extends 'base.html' %}
+{% block title %}Payment Review | ProjectHub{% endblock %}
+{% block app_main_class %}app-main app-main-tight{% endblock %}
+{% block topbar %}{% endblock %}
 {% block content %}
-<div class="card panel-card p-4">
-    <h3 class="mb-3">Payments</h3>
-    <div class="table-responsive">
-        <table class="table">
-            <thead><tr><th>User</th><th>Project</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
-            <tbody>
-            {% for payment in payments %}
-                <tr>
-                    <td>{{ payment.user.username }}</td>
-                    <td>{{ payment.user_project.project.title }}</td>
-                    <td>{{ payment.get_type_display }}</td>
-                    <td>Rs. {{ payment.amount }}</td>
-                    <td>{{ payment.get_status_display }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+<section class="payment-review-shell">
+    <div class="card panel-card payment-review-header p-4 p-lg-5">
+        <span class="eyebrow">Payment Review</span>
+        <h2 class="manual-payment-title">Payment Management</h2>
+        <p class="manual-payment-copy mb-0">Track all client payments from a single hierarchy and drill down into stage-level actions.</p>
     </div>
-</div>
+
+    <div class="card panel-card p-4 payment-filter-card">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-lg-6">
+                <label class="form-label mb-1">Search users</label>
+                <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Search by name or email">
+            </div>
+            <div class="col-12 col-lg-4">
+                <label class="form-label mb-1">Filter</label>
+                <select class="form-select" name="filter">
+                    <option value="all" {% if selected_filter == 'all' %}selected{% endif %}>All Users</option>
+                    <option value="pending" {% if selected_filter == 'pending' %}selected{% endif %}>Users with Pending Payments</option>
+                    <option value="completed" {% if selected_filter == 'completed' %}selected{% endif %}>Completed Payments</option>
+                </select>
+            </div>
+            <div class="col-12 col-lg-2">
+                <button type="submit" class="btn btn-dark w-100">Apply</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row g-4">
+        {% for user in users %}
+            <div class="col-12 col-md-6 col-xl-4">
+                <article class="card panel-card payment-user-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between gap-3 align-items-start mb-3">
+                            <div>
+                                <h3 class="h5 mb-1">{{ user.name }}</h3>
+                                <p class="text-muted mb-0 small">{{ user.email|default:'No email' }}</p>
+                            </div>
+                            {% if user.is_completed %}
+                                <span class="status-pill stage-status-paid">Completed</span>
+                            {% elif user.has_overdue %}
+                                <span class="status-pill stage-status-overdue">Overdue</span>
+                            {% elif user.has_pending %}
+                                <span class="status-pill stage-status-pending">Pending</span>
+                            {% else %}
+                                <span class="status-pill stage-status-locked">No Projects</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="manual-payment-facts payment-kpi-grid">
+                            <div><span>Projects</span><strong>{{ user.total_projects }}</strong></div>
+                            <div><span>Total Paid</span><strong>Rs. {{ user.total_paid }}</strong></div>
+                            <div><span>Pending</span><strong>Rs. {{ user.pending_amount }}</strong></div>
+                            <div><span>Status</span><strong>{% if user.has_pending %}Needs Review{% elif user.is_completed %}Settled{% else %}Inactive{% endif %}</strong></div>
+                        </div>
+
+                        <a href="/admin/payments/users/{{ user.id }}/" class="btn btn-outline-dark mt-4 w-100">View Details</a>
+                    </div>
+                </article>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card panel-card p-5 text-center">
+                    <h3 class="h4 mb-2">No users match the current filters</h3>
+                    <p class="text-muted mb-0">Try a different search term or switch payment filter criteria.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
 {% endblock %}

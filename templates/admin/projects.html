@@ -1,17 +1,9 @@
 {% extends 'base.html' %}
+{% block title %}Catalog Management | ProjectHub{% endblock %}
+{% block page_title %}Catalog Management{% endblock %}
 {% block content %}
-<div class="row g-4">
-    <div class="col-lg-4">
-        <div class="card panel-card p-4">
-            <h3 class="mb-3">Add Catalog Item</h3>
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button class="btn btn-dark">Save</button>
-            </form>
-        </div>
-    </div>
-    <div class="col-lg-8">
+
+    <div class="col-lg-12">
         <div class="card panel-card p-4">
             <h3 class="mb-3">Catalog</h3>
             <div class="table-responsive">

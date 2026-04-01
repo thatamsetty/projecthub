@@ -4,43 +4,152 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ProjectHub</title>
+    <title>{% block title %}ProjectHub{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{% static 'css/app.css' %}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'css/app.css' %}?v=20260401-prod-10" rel="stylesheet">
 </head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand" href="/dashboard/">ProjectHub</a>
-        <div class="navbar-nav ms-auto gap-2">
-            {% if request.user.is_authenticated and not request.user.is_staff %}
-                <a class="nav-link" href="/dashboard/">Dashboard</a>
-                <a class="nav-link" href="/projects/">Projects</a>
-                <a class="nav-link" href="/payments/">Payments</a>
-                <a class="nav-link" href="/downloads/">Downloads</a>
-                <a class="nav-link" href="/auth/logout/">Logout</a>
-            {% elif request.user.is_authenticated and request.user.is_staff %}
-                <a class="nav-link" href="/admin-dashboard/">Admin Dashboard</a>
-                <a class="nav-link" href="/admin/projects/">Catalog</a>
-                <a class="nav-link" href="/admin/users/">Users</a>
-                <a class="nav-link" href="/admin/payments/">Payments</a>
-                <a class="nav-link" href="/auth/logout/">Logout</a>
-            {% else %}
-                <a class="nav-link" href="/auth/login/">User Login</a>
-                <a class="nav-link" href="/admin-auth/login/">Admin Login</a>
-                <a class="nav-link" href="/auth/register/">Sign Up</a>
-            {% endif %}
+<body class="app-body">
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <a class="app-sidebar-brand" href="{% if request.user.is_authenticated and request.user.is_staff %}/admin-dashboard/{% elif request.user.is_authenticated %}/dashboard/{% else %}/{% endif %}">
+                <span class="app-sidebar-brand-mark"><i class="bi bi-grid-1x2-fill"></i></span>
+                <span class="app-sidebar-brand-copy">
+                    <strong>ProjectHub</strong>
+                    <small>{% if request.user.is_staff %}Admin Workspace{% else %}Client Workspace{% endif %}</small>
+                </span>
+            </a>
+
+            <nav class="app-sidebar-nav">
+                {% if request.user.is_authenticated and request.user.is_staff %}
+                    <a class="app-nav-link {% if request.path == '/admin-dashboard/' %}is-active{% endif %}" href="/admin-dashboard/">
+                        <i class="bi bi-house-door"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a class="app-nav-link {% if '/admin/projects/' in request.path %}is-active{% endif %}" href="/admin/projects/">
+                        <i class="bi bi-collection"></i>
+                        <span>Catalog</span>
+                    </a>
+                    <a class="app-nav-link {% if '/admin/users/' in request.path %}is-active{% endif %}" href="/admin/users/">
+                        <i class="bi bi-people"></i>
+                        <span>Users</span>
+                    </a>
+                    <a class="app-nav-link {% if '/admin/payments/' in request.path %}is-active{% endif %}" href="/admin/payments/">
+                        <i class="bi bi-credit-card-2-front"></i>
+                        <span>Payments</span>
+                    </a>
+                {% elif request.user.is_authenticated %}
+                    <a class="app-nav-link {% if request.path == '/dashboard/' %}is-active{% endif %}" href="/dashboard/">
+                        <i class="bi bi-house-door"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a class="app-nav-link {% if '/payments/' in request.path %}is-active{% endif %}" href="/payments/">
+                        <i class="bi bi-wallet2"></i>
+                        <span>Payments</span>
+                    </a>
+                    <a class="app-nav-link {% if '/downloads/' in request.path %}is-active{% endif %}" href="/downloads/">
+                        <i class="bi bi-cloud-arrow-down"></i>
+                        <span>Downloads</span>
+                    </a>
+                    <a class="app-nav-link {% if '/submit/' in request.path %}is-active{% endif %}" href="/submit/">
+                        <i class="bi bi-plus-square"></i>
+                        <span>Submit</span>
+                    </a>
+                {% else %}
+                    <a class="app-nav-link {% if '/auth/login/' in request.path %}is-active{% endif %}" href="/auth/login/">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span>User Login</span>
+                    </a>
+                    <a class="app-nav-link {% if '/admin-auth/login/' in request.path %}is-active{% endif %}" href="/admin-auth/login/">
+                        <i class="bi bi-shield-lock"></i>
+                        <span>Admin Login</span>
+                    </a>
+                    <a class="app-nav-link {% if '/auth/register/' in request.path %}is-active{% endif %}" href="/auth/register/">
+                        <i class="bi bi-person-plus"></i>
+                        <span>Register</span>
+                    </a>
+                {% endif %}
+            </nav>
+
+            <div class="app-sidebar-footer">
+                {% if request.user.is_authenticated %}
+                    <div class="app-user-chip">
+                        <span class="app-user-avatar">{{ request.user.username|default:'U'|slice:':1'|upper }}</span>
+                        <div>
+                            <strong>{{ request.user.username }}</strong>
+                            <small>{% if request.user.is_staff %}Administrator{% else %}Member{% endif %}</small>
+                        </div>
+                    </div>
+                    <a class="app-logout-link" href="/auth/logout/">
+                        <i class="bi bi-box-arrow-left"></i>
+                        <span>Logout</span>
+                    </a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <div class="{% block app_main_class %}app-main{% endblock %}">
+            {% block topbar %}
+                <header class="app-topbar">
+                    <div>
+                        <p class="app-topbar-kicker">{% block page_kicker %}{% if request.user.is_staff %}Operations Overview{% else %}Workspace Overview{% endif %}{% endblock %}</p>
+                        <h1 class="app-topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                    </div>
+                    <div class="app-topbar-actions">
+                        {% if request.user.is_authenticated and not request.user.is_staff %}
+                            <div class="dropdown">
+                                <button class="app-notification-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell"></i>
+                                    {% if notification_unread_count %}
+                                        <span class="notification-badge">{{ notification_unread_count }}</span>
+                                    {% endif %}
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end notification-menu p-0">
+                                    <div class="notification-menu-header">
+                                        <span>Recent Notifications</span>
+                                        {% if header_notifications %}
+                                            <form method="post" action="/notifications/clear/" class="notification-clear-form">
+                                                {% csrf_token %}
+                                                <button type="submit" class="notification-clear-btn" aria-label="Clear all notifications" title="Clear all notifications">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                    {% for notification in header_notifications %}
+                                        <form method="post" action="/notifications/{{ notification.id }}/read/" class="notification-row">
+                                            {% csrf_token %}
+                                            <button type="submit" class="notification-button {% if not notification.is_read %}notification-unread{% endif %}">
+                                                <strong>{{ notification.title }}</strong>
+                                                <span>{{ notification.message }}</span>
+                                            </button>
+                                        </form>
+                                    {% empty %}
+                                        <div class="notification-empty">No notifications yet.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </header>
+            {% endblock %}
+
+            <main class="app-main-content">
+                {% if messages %}
+                    <div class="app-message-stack">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags|default:'info' }} app-alert">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% block content %}{% endblock %}
+            </main>
         </div>
     </div>
-</nav>
-<div class="container py-5">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-    {% block content %}{% endblock %}
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

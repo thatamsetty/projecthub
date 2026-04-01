@@ -1,20 +1,105 @@
 {% extends 'base.html' %}
+{% block title %}{{ user_project.project.title }} | ProjectHub{% endblock %}
+{% block page_title %}Project Workflow{% endblock %}
 {% block content %}
-<div class="card panel-card p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">{{ user_project.project.title }}</h2>
-        <span class="status-pill status-{{ user_project.status }}">{{ user_project.get_status_display }}</span>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card panel-card p-4 p-lg-5">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <span class="eyebrow">Project Workflow</span>
+                    <h2 class="mb-1">{{ user_project.project.title }}</h2>
+                    <p class="text-muted mb-0">{{ user_project.project.tech_stack }}</p>
+                </div>
+                <span class="status-pill status-{{ user_project.status }}">{{ user_project.get_status_display }}</span>
+            </div>
+
+            <p class="mb-3">{{ user_project.custom_description }}</p>
+
+            <div class="project-detail-grid">
+                <div>
+                    <span>Total Price</span>
+                    <strong>{% if user_project.total_price %}Rs. {{ user_project.total_price }}{% else %}Awaiting admin approval{% endif %}</strong>
+                </div>
+                <div>
+                    <span>Paid Amount</span>
+                    <strong>Rs. {{ user_project.paid_amount }}</strong>
+                </div>
+                <div>
+                    <span>Current Stage</span>
+                    <strong>{{ user_project.get_current_stage_display }}</strong>
+                </div>
+                <div>
+                    <span>Payment Status</span>
+                    <strong>{{ user_project.get_payment_status_display }}</strong>
+                </div>
+            </div>
+
+            <div class="progress progress-hero mt-4 mb-3">
+                <div class="progress-bar" style="width: {{ user_project.progress }}%;">{{ user_project.progress }}%</div>
+            </div>
+
+            <div class="timeline-strip mb-4">
+                {% for label, is_active in user_project.timeline %}
+                    <span class="timeline-step {% if is_active %}timeline-step-active{% endif %}">{{ label }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="row g-3">
+                {% for stage in user_project.payment_stage_breakdown %}
+                    <div class="col-md-4">
+                        <div class="stage-summary-card h-100">
+                            <strong>{{ stage.label }}</strong>
+                            <div class="stage-amount">Rs. {{ stage.amount }}</div>
+                            <div class="text-muted small">
+                                {% if stage.stage == 1 %}
+                                    {% if user_project.payment_summary.paid_stage_1 %}Paid{% elif user_project.payment_summary.verification_stage_1 %}Under verification{% elif user_project.payment_summary.requested_stage_1 %}Ready to pay{% else %}Locked{% endif %}
+                                {% elif stage.stage == 2 %}
+                                    {% if user_project.payment_summary.paid_stage_2 %}Paid{% elif user_project.payment_summary.verification_stage_2 %}Under verification{% elif user_project.payment_summary.requested_stage_2 %}Ready to pay{% else %}Locked{% endif %}
+                                {% else %}
+                                    {% if user_project.payment_summary.paid_stage_3 %}Paid{% elif user_project.payment_summary.verification_stage_3 %}Under verification{% elif user_project.payment_summary.requested_stage_3 %}Ready to pay{% else %}Locked{% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if user_project.can_download %}
+                <a class="btn btn-dark mt-4" href="{{ user_project.delivery_url }}" target="_blank" rel="noopener">Open Delivery</a>
+            {% endif %}
+        </div>
     </div>
-    <p><strong>Tech Stack:</strong> {{ user_project.project.tech_stack }}</p>
-    <p><strong>Description:</strong> {{ user_project.custom_description }}</p>
-    <p><strong>Effective Price:</strong> Rs. {{ user_project.effective_price }}</p>
-    <div class="progress mb-3">
-        <div class="progress-bar" style="width: {{ user_project.progress }}%;">{{ user_project.progress }}%</div>
-    </div>
-    <div class="row g-3">
-        <div class="col-md-4"><div class="border rounded p-3">Advance: {% if user_project.payment_summary.advance_paid %}Paid{% else %}Pending{% endif %}</div></div>
-        <div class="col-md-4"><div class="border rounded p-3">Final: {% if user_project.payment_summary.final_paid %}Paid{% else %}Pending{% endif %}</div></div>
-        <div class="col-md-4"><div class="border rounded p-3">Delivery: {% if user_project.delivery_url %}Uploaded{% else %}Pending{% endif %}</div></div>
+
+    <div class="col-lg-4">
+        <div class="card panel-card p-4">
+            <h4 class="mb-3">Payment Summary</h4>
+            <p class="mb-1"><strong>Paid:</strong> Rs. {{ user_project.payment_summary.paid_amount }}</p>
+            <p class="mb-3"><strong>Pending:</strong> Rs. {{ user_project.payment_summary.pending_amount }}</p>
+
+            {% if user_project.payment_requested_for_stage and user_project.status != 'delivered' %}
+                <a class="btn btn-dark w-100 mb-3" href="/payments/{{ user_project.id }}/stage/{{ user_project.payment_requested_for_stage }}/">Pay Now</a>
+            {% endif %}
+            <a class="btn btn-outline-dark w-100" href="/payments/">Go to Payments</a>
+
+            {% if user_project.payment_proof %}
+                <div class="submitted-proof-preview mt-4">
+                    <span class="small text-uppercase text-muted fw-semibold">Current proof on file</span>
+                    <img src="{{ user_project.payment_proof.url }}" alt="Uploaded payment proof" class="img-fluid rounded-4 mt-2">
+                </div>
+            {% endif %}
+        </div>
+
+        {% if form %}
+            <div class="card panel-card p-4 mt-4">
+                <h4 class="mb-3">Edit Pending Submission</h4>
+                <form method="post" enctype="multipart/form-data" class="d-grid gap-3">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button class="btn btn-dark">Update Submission</button>
+                </form>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

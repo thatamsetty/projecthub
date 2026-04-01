@@ -1,12 +1,40 @@
 {% extends 'base.html' %}
+{% block title %}Submit Project | ProjectHub{% endblock %}
+{% block page_title %}Submit Project{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-7">
         <div class="card panel-card p-4">
             <h2 class="mb-3">Submit Project Request</h2>
+            <p class="text-muted">Share your project title, preferred stack, requirements, and files for admin review and pricing.</p>
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                {{ form.as_p }}
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.project_title.id_for_label }}">Project Title</label>
+                    {{ form.project_title }}
+                    {% for error in form.project_title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.tech_stack.id_for_label }}">Preferred Tech Stack</label>
+                    {{ form.tech_stack }}
+                    {% for error in form.tech_stack.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.custom_description.id_for_label }}">Project Description</label>
+                    {{ form.custom_description }}
+                    {% for error in form.custom_description.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.attachment.id_for_label }}">Attachment</label>
+                    {{ form.attachment }}
+                    <div class="form-text">Optional: upload PDF, DOC, PPT, ZIP, or RAR up to 10 MB.</div>
+                    {% for error in form.attachment.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
                 <button class="btn btn-dark" type="submit">Submit</button>
             </form>
         </div>

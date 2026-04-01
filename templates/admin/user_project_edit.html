@@ -1,16 +1,267 @@
 {% extends 'base.html' %}
+{% block title %}Manage User Project | ProjectHub{% endblock %}
+{% block app_main_class %}app-main app-main-tight{% endblock %}
+{% block topbar %}{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-7">
-        <div class="card panel-card p-4">
-            <h3 class="mb-3">Manage User Project</h3>
-            <p class="text-muted">{{ user_project.user.username }} / {{ user_project.project.title }}</p>
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button class="btn btn-dark">Update Lifecycle</button>
-            </form>
+<section class="manage-project-shell">
+    <div class="card panel-card payment-review-header p-4 p-lg-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <span class="eyebrow">Manage User Project</span>
+                <h2 class="manual-payment-title mb-1">{{ user_project.project.title }}</h2>
+                <p class="manual-payment-copy mb-0">Client: {{ user_project.user.username }} | Stage: {{ user_project.get_current_stage_display }}</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="/admin/users/" class="btn btn-outline-dark">Back to Users</a>
+                <a href="/admin/payments/projects/{{ user_project.id }}/" class="btn btn-outline-dark">Payment Detail</a>
+            </div>
         </div>
     </div>
-</div>
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-4 manage-project-summary-col">
+            <article class="card panel-card manage-project-summary-card">
+                <div class="card-body p-4">
+                    <h3 class="payment-section-title">Project Overview</h3>
+                    <div class="manual-payment-facts payment-kpi-grid">
+                        <div><span>Status</span><strong>{{ user_project.get_status_display }}</strong></div>
+                        <div><span>Current Stage</span><strong>{{ user_project.get_current_stage_display }}</strong></div>
+                        <div><span>Total Price</span><strong>Rs. {{ user_project.total_price|default:'0.00' }}</strong></div>
+                        <div><span>Paid Amount</span><strong>Rs. {{ user_project.paid_amount }}</strong></div>
+                        <div><span>Payment State</span><strong>{{ user_project.get_payment_status_display }}</strong></div>
+                        <div><span>Progress</span><strong>{{ user_project.progress }}%</strong></div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card panel-card mt-3">
+                <div class="card-body p-4">
+                    <h3 class="payment-section-title">Recent Audit Trail</h3>
+                    <div class="history-list">
+                        {% for log in user_project.audit_logs.all|slice:":5" %}
+                            <div class="history-item">
+                                <strong>{{ log.action|title|cut:"_" }}</strong>
+                                <div class="small text-muted">{{ log.created_at|date:"M d, Y h:i A" }}</div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted mb-0">No admin actions logged yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-lg-8">
+            <article class="card panel-card">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between gap-2 align-items-center mb-3">
+                        <h3 class="payment-section-title mb-0">Payment Verification</h3>
+                        <small class="text-muted">Showing latest requests</small>
+                    </div>
+
+                    <div class="stage-list">
+                        {% for payment in user_project.payments.all|slice:":3" %}
+                            <div class="stage-card stage-card-compact">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                    <div>
+                                        <div class="stage-label-mini">{{ payment.get_stage_display }}</div>
+                                        <div class="stage-amount-mini">Rs. {{ payment.amount }}</div>
+                                    </div>
+                                    <span class="status-pill payment-state-{{ payment.status }} stage-pill-mini">{{ payment.get_status_display }}</span>
+                                </div>
+
+                                <div class="stage-meta-grid">
+                                    <div><span>Requested</span><strong>{{ payment.requested_at|date:"M d, Y h:i A" }}</strong></div>
+                                    <div>
+                                        <span>Updated</span>
+                                        <strong>
+                                            {% if payment.reviewed_at %}
+                                                {{ payment.reviewed_at|date:"M d, Y h:i A" }}
+                                            {% else %}
+                                                {{ payment.requested_at|date:"M d, Y h:i A" }}
+                                            {% endif %}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div class="stage-actions mt-2">
+                                    {% if payment.payment_proof %}
+                                        <div class="stage-proof-link-wrap">
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-dark stage-proof-view-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#manageProofPreviewModal"
+                                                data-proof-url="{{ payment.payment_proof.url }}"
+                                                data-proof-label="{{ user_project.project.title }} - {{ payment.get_stage_display }}"
+                                            >
+                                                View Proof
+                                            </button>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if payment.status == 'verification' %}
+                                        <div class="stage-actions-grid">
+                                            <form method="post" class="stage-action-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="approve_payment">
+                                                <input type="hidden" name="payment_id" value="{{ payment.id }}">
+                                                <textarea name="review_note" rows="2" class="form-control" placeholder="Optional approval note"></textarea>
+                                                {% for error in approve_payment_form.non_field_errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                                <button class="btn btn-dark" type="submit">Approve</button>
+                                            </form>
+                                            <form method="post" class="stage-action-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="reject_payment">
+                                                <input type="hidden" name="payment_id" value="{{ payment.id }}">
+                                                <textarea name="review_note" rows="2" class="form-control" placeholder="Reason for rejection" required></textarea>
+                                                {% for error in reject_payment_form.non_field_errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                                <button class="btn btn-outline-danger" type="submit">Reject</button>
+                                            </form>
+                                        </div>
+                                    {% elif payment.review_note %}
+                                        <div class="small text-muted">Note: {{ payment.review_note }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted mb-0">No payment requests for this project yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </article>
+
+            <div class="row g-3 mt-1">
+                <div class="col-12 col-xl-6">
+                    <article class="card panel-card h-100">
+                        <div class="card-body p-4">
+                            <h3 class="payment-section-title">Approve and Price</h3>
+                            <form method="post" class="d-grid gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve">
+                                <label class="form-label mb-1">Total Price</label>
+                                {{ approval_form.total_price }}
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label class="form-label mb-1">Installment 1 (%)</label>
+                                        {{ approval_form.installment_1_percentage }}
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-1">Installment 2 (%)</label>
+                                        {{ approval_form.installment_2_percentage }}
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-1">Installment 3 (%)</label>
+                                        {{ approval_form.installment_3_percentage }}
+                                    </div>
+                                </div>
+                                {% for error in approval_form.non_field_errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                <button class="btn btn-dark mt-2">Approve Project</button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+                <div class="col-12 col-xl-6">
+                    <article class="card panel-card h-100">
+                        <div class="card-body p-4">
+                            <h3 class="payment-section-title">Progress Update</h3>
+                            <form method="post" class="d-grid gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="progress">
+                                <label class="form-label mb-1">Progress (%)</label>
+                                {{ progress_form.progress }}
+                                <label class="form-label mb-1 mt-1">Internal Notes</label>
+                                {{ progress_form.admin_notes }}
+                                {% for error in progress_form.non_field_errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                <button class="btn btn-outline-dark mt-2">Save Progress</button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-1">
+                <div class="col-12 col-xl-6">
+                    <article class="card panel-card h-100">
+                        <div class="card-body p-4">
+                            <h3 class="payment-section-title">Delivery</h3>
+                            <p class="small text-muted mb-3">Upload a file (max 100 MB) or provide delivery URL, then include final handover notes.</p>
+                            <form method="post" enctype="multipart/form-data" class="d-grid gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="deliver">
+                                <label class="form-label mb-1">Delivery File</label>
+                                {{ delivery_form.delivery_file }}
+                                <label class="form-label mb-1 mt-1">Delivery URL</label>
+                                {{ delivery_form.delivery_url }}
+                                <label class="form-label mb-1 mt-1">Delivery Notes</label>
+                                {{ delivery_form.admin_notes }}
+                                {% for error in delivery_form.non_field_errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                <button class="btn btn-dark mt-2">Deliver Project</button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+                <div class="col-12 col-xl-6">
+                    <article class="card panel-card h-100">
+                        <div class="card-body p-4">
+                            <h3 class="payment-section-title">Manual Notification</h3>
+                            <p class="small text-muted mb-3">Send a direct update to the client with clear next steps.</p>
+                            <form method="post" class="d-grid gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="notify">
+                                <label class="form-label mb-1">Title</label>
+                                {{ notification_form.title }}
+                                <label class="form-label mb-1 mt-1">Message</label>
+                                {{ notification_form.message }}
+                                {% for error in notification_form.non_field_errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                <button class="btn btn-outline-dark mt-2">Send Notification</button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="manageProofPreviewModal" tabindex="-1" aria-labelledby="manageProofPreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content proof-modal-content">
+                <div class="modal-header proof-modal-header">
+                    <h5 class="modal-title" id="manageProofPreviewModalLabel">Payment Proof</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body proof-modal-body">
+                    <img id="manageProofPreviewImage" src="" alt="Payment proof preview" class="proof-modal-image">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    (function () {
+        const proofModal = document.getElementById('manageProofPreviewModal');
+        if (!proofModal) return;
+
+        proofModal.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            if (!trigger) return;
+
+            const proofUrl = trigger.getAttribute('data-proof-url') || '';
+            const proofLabel = trigger.getAttribute('data-proof-label') || 'Payment Proof';
+            const modalTitle = proofModal.querySelector('#manageProofPreviewModalLabel');
+            const modalImage = proofModal.querySelector('#manageProofPreviewImage');
+
+            modalTitle.textContent = proofLabel;
+            modalImage.src = proofUrl;
+            modalImage.alt = proofLabel;
+        });
+
+        proofModal.addEventListener('hidden.bs.modal', function () {
+            const modalImage = proofModal.querySelector('#manageProofPreviewImage');
+            modalImage.src = '';
+            modalImage.alt = 'Payment proof preview';
+        });
+    })();
+</script>
 {% endblock %}

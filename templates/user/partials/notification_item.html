@@ -1,0 +1,15 @@
+<div class="border rounded p-3 mb-2 {% if not notification.is_read %}notification-unread{% endif %}">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+        <div>
+            <h6 class="mb-1">{{ notification.title }}</h6>
+            <p class="small text-muted mb-1">{{ notification.message }}</p>
+            <small class="text-muted">{{ notification.created_at|date:"M d, Y H:i" }}</small>
+        </div>
+        {% if show_mark_read and not notification.is_read %}
+            <form method="post" action="/notifications/{{ notification.id }}/read/">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-dark" type="submit">Mark read</button>
+            </form>
+        {% endif %}
+    </div>
+</div>

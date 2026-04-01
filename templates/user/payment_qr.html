@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Stage Payment | ProjectHub{% endblock %}
+{% block page_title %}Stage Payment{% endblock %}
+{% block content %}
+<section class="manual-payment-shell">
+    <div class="manual-payment-header card panel-card p-4 p-lg-5 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <span class="eyebrow">Stage {{ stage }} Payment</span>
+                <h1 class="manual-payment-title">{{ user_project.project.title }}</h1>
+                <p class="manual-payment-copy mb-0">Complete the payment using any UPI app, then upload a screenshot for manual verification.</p>
+            </div>
+            <span class="status-pill payment-status-{{ user_project.payment_status }}">{{ user_project.get_payment_status_display }}</span>
+        </div>
+    </div>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-xl-7">
+            <div class="card panel-card p-4 p-lg-5">
+                <div class="text-center">
+                    <p class="qr-caption mb-2">Scan QR to pay</p>
+                    <h2 class="manual-amount">Rs. {{ amount }}</h2>
+                </div>
+
+                <div class="qr-hero-wrap">
+                    <div class="qr-frame">
+                        <img src="{% static qr_image_path %}" alt="ProjectHub UPI QR" class="img-fluid qr-image">
+                    </div>
+                </div>
+
+                <div class="upi-meta card border-0">
+                    <div class="upi-meta-row">
+                        <span>UPI ID</span>
+                        <strong>{{ upi_id }}</strong>
+                    </div>
+                    <div class="upi-meta-row">
+                        <span>Project</span>
+                        <strong>{{ user_project.project.title }}</strong>
+                    </div>
+                    <div class="upi-meta-row">
+                        <span>Current stage</span>
+                        <strong>{{ payment.get_stage_display }}</strong>
+                    </div>
+                </div>
+
+                <div class="instruction-list mt-4">
+                    <div class="instruction-item">
+                        <span>1</span>
+                        <p>Scan the QR code using Paytm, PhonePe, GPay, BHIM, or any UPI app.</p>
+                    </div>
+                    <div class="instruction-item">
+                        <span>2</span>
+                        <p>Pay the exact amount shown above to avoid verification delays.</p>
+                    </div>
+                    <div class="instruction-item">
+                        <span>3</span>
+                        <p>Upload a clear screenshot that includes the paid amount, date, and transaction status.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="card panel-card p-4 p-lg-5">
+                <h3 class="h4 mb-3">Upload Payment Screenshot</h3>
+                {% if can_upload_proof %}
+                    <form method="post" enctype="multipart/form-data" class="d-grid gap-3">
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger mb-0">
+                                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <label class="form-label fw-semibold">{{ form.screenshot.label }}</label>
+                            {{ form.screenshot }}
+                            {% for error in form.screenshot.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                            <div class="form-text">{{ form.screenshot.help_text }}</div>
+                        </div>
+                        <div>
+                            <label class="form-label fw-semibold">{{ form.note.label }}</label>
+                            {{ form.note }}
+                            {% for error in form.note.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                            <div class="form-text">{{ form.note.help_text }}</div>
+                        </div>
+                        <button class="btn btn-dark btn-lg" type="submit">Submit For Verification</button>
+                    </form>
+                {% else %}
+                    <div class="status-locked-box">
+                        <h4 class="h5">Proof already submitted</h4>
+                        <p class="text-muted mb-0">Further uploads are disabled while this payment is being reviewed or after it has been approved.</p>
+                    </div>
+                {% endif %}
+
+                <div class="payment-side-summary mt-4">
+                    <div>
+                        <span>Payment state</span>
+                        <strong>{{ payment.get_status_display }}</strong>
+                    </div>
+                    <div>
+                        <span>Requested on</span>
+                        <strong>{{ payment.requested_at|date:"M d, Y h:i A" }}</strong>
+                    </div>
+                    <div>
+                        <span>Proof uploaded on</span>
+                        <strong>{{ payment.proof_uploaded_at|date:"M d, Y h:i A"|default:"Not submitted yet" }}</strong>
+                    </div>
+                </div>
+
+                {% if payment.payment_proof %}
+                    <div class="submitted-proof-preview mt-4">
+                        <span class="small text-uppercase text-muted fw-semibold">Latest submitted screenshot</span>
+                        <img src="{{ payment.payment_proof.url }}" alt="Payment proof" class="img-fluid rounded-4 mt-2">
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

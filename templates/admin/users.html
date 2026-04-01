@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
+{% block title %}Users | ProjectHub{% endblock %}
+{% block page_title %}Users & Projects{% endblock %}
 {% block content %}
 <div class="card panel-card p-4">
     <h3 class="mb-3">Users and Project Lifecycle</h3>
     <div class="table-responsive">
         <table class="table align-middle">
-            <thead><tr><th>User</th><th>Project</th><th>Status</th><th>Progress</th><th>Custom Price</th><th></th></tr></thead>
+            <thead><tr><th>User</th><th>Project</th><th>Status</th><th>Progress</th><th>Total Price</th><th>Paid</th><th>Current Stage</th><th></th></tr></thead>
             <tbody>
             {% for user_project in user_projects %}
                 <tr>
@@ -12,7 +14,9 @@
                     <td>{{ user_project.project.title }}</td>
                     <td>{{ user_project.get_status_display }}</td>
                     <td>{{ user_project.progress }}%</td>
-                    <td>{{ user_project.custom_price|default:'-' }}</td>
+                    <td>{{ user_project.total_price|default:'-' }}</td>
+                    <td>{{ user_project.paid_amount }}</td>
+                    <td>{{ user_project.get_current_stage_display }}</td>
                     <td><a href="/admin/users/projects/{{ user_project.id }}/edit/" class="btn btn-sm btn-outline-dark">Manage</a></td>
                 </tr>
             {% endfor %}

@@ -6,6 +6,7 @@ from django.utils import timezone
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     mobile = models.CharField(max_length=20, unique=True)
+    is_online = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
 
     REQUIRED_FIELDS = ['email', 'mobile']

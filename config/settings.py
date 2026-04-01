@@ -1,8 +1,12 @@
 import os
 from pathlib import Path
 from urllib.parse import urlparse
+import pymysql
+pymysql.install_as_MySQLdb()
 
 from dotenv import load_dotenv
+
+
 
 load_dotenv()
 
@@ -56,6 +60,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.projects.context_processors.notification_context',
             ],
         },
     },
@@ -64,8 +69,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
+
+
 def build_database_config():
     database_url = os.getenv('DATABASE_URL', '')
+
+    # PostgreSQL
     if database_url.startswith('postgres'):
         parsed = urlparse(database_url)
         return {
@@ -78,14 +87,36 @@ def build_database_config():
             'CONN_MAX_AGE': 600,
             'OPTIONS': {'sslmode': 'require'} if not DEBUG else {},
         }
+
+    # MySQL ✅
+    if database_url.startswith('mysql'):
+        parsed = urlparse(database_url)
+        return {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': parsed.path.lstrip('/'),
+            'USER': parsed.username or 'root',
+            'PASSWORD': parsed.password or '',
+            'HOST': parsed.hostname or '127.0.0.1',
+            'PORT': parsed.port or '3306',
+            'CONN_MAX_AGE': 600,
+        }
+
+    # SQLite fallback
     return {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 
-
-DATABASES = {'default': build_database_config()}
-
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'projecthub_db',
+        'USER': 'root',
+        'PASSWORD': 'Thrinethra@123#',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    }
+}
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

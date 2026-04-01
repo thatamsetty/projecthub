@@ -5,10 +5,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}ProjectHub{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{% static 'css/app.css' %}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'css/app.css' %}?v=20260330-prod-10" rel="stylesheet">
 </head>
-<body class="auth-body">
+<body class="auth-body {% block auth_body_class %}{% endblock %}">
     <main class="auth-shell">
         <div class="auth-background">
             <div class="auth-column auth-column-left"></div>
@@ -18,38 +22,58 @@
             <div class="auth-wave auth-wave-left"></div>
             <div class="auth-wave auth-wave-right"></div>
         </div>
-        <section class="auth-content auth-stage">
-            <a class="auth-brand" href="/">
-                <span class="auth-brand-mark">
-                    <svg viewBox="0 0 72 72" aria-hidden="true">
-                        <defs>
-                            <linearGradient id="brandHexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#8f5dff"></stop>
-                                <stop offset="55%" stop-color="#4ec4ff"></stop>
-                                <stop offset="100%" stop-color="#3068ff"></stop>
-                            </linearGradient>
-                            <linearGradient id="brandTickGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#ffffff"></stop>
-                                <stop offset="100%" stop-color="#d8f4ff"></stop>
-                            </linearGradient>
-                        </defs>
-                        <path d="M36 4 59 17.5V44.5L36 58 13 44.5V17.5Z" fill="url(#brandHexGradient)" opacity="0.95"></path>
-                        <path d="M36 14 50 22.3V39.1L36 47.4 22 39.1V22.3Z" fill="#173b9f" opacity="0.45"></path>
-                        <rect x="22" y="23" width="28" height="18" rx="4" fill="url(#brandTickGradient)"></rect>
-                        <path d="m30.5 32.8 4.6 4.7 8.7-10" fill="none" stroke="#3b6bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
-                        <circle cx="60.5" cy="16.5" r="3.5" fill="#57d1ff"></circle>
-                        <circle cx="65.5" cy="23.5" r="2.5" fill="#57d1ff" opacity="0.9"></circle>
-                        <circle cx="58" cy="24.5" r="2" fill="#57d1ff" opacity="0.75"></circle>
-                    </svg>
-                </span>
-                <span class="auth-brand-copy">
-                    <span class="auth-brand-title">Project<span>Hub</span></span>
-                    <span class="auth-brand-tagline">Manage &bull; Track &bull; Deliver</span>
-                </span>
-            </a>
-            {% block auth_content %}{% endblock %}
+        <section class="auth-content auth-stage {% block auth_content_class %}{% endblock %}">
+            {% block auth_panel %}
+                <div class="auth-panel-shell">
+                    <a class="auth-brand auth-brand-centered" href="/">
+                        <span class="auth-brand-mark">
+                            <svg viewBox="0 0 72 72" aria-hidden="true">
+                                <defs>
+                                    <linearGradient id="brandHexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#7fd8ff"></stop>
+                                        <stop offset="50%" stop-color="#4d68ff"></stop>
+                                        <stop offset="100%" stop-color="#243b86"></stop>
+                                    </linearGradient>
+                                    <linearGradient id="brandTickGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#ffffff"></stop>
+                                        <stop offset="100%" stop-color="#e6f6ff"></stop>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M36 4 59 17.5V44.5L36 58 13 44.5V17.5Z" fill="url(#brandHexGradient)" opacity="0.95"></path>
+                                <path d="M36 14 50 22.3V39.1L36 47.4 22 39.1V22.3Z" fill="#173b9f" opacity="0.26"></path>
+                                <rect x="22" y="23" width="28" height="18" rx="4" fill="url(#brandTickGradient)"></rect>
+                                <path d="m30.5 32.8 4.6 4.7 8.7-10" fill="none" stroke="#3b6bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+                                <circle cx="60.5" cy="16.5" r="3.5" fill="#57d1ff"></circle>
+                                <circle cx="65.5" cy="23.5" r="2.5" fill="#57d1ff" opacity="0.9"></circle>
+                                <circle cx="58" cy="24.5" r="2" fill="#57d1ff" opacity="0.75"></circle>
+                            </svg>
+                        </span>
+                        <span class="auth-brand-copy">
+                            <span class="auth-brand-title">Project<span>Hub</span></span>
+                            <span class="auth-brand-tagline">Manage / Track / Deliver</span>
+                        </span>
+                    </a>
+                    {% block auth_content %}{% endblock %}
+                </div>
+            {% endblock %}
         </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('[data-password-toggle]').forEach(function (toggleButton) {
+            toggleButton.addEventListener('click', function () {
+                var wrapper = toggleButton.closest('.auth-password-wrap');
+                var input = wrapper ? wrapper.querySelector('input[data-password-toggle-target="true"]') : null;
+                if (!input) {
+                    return;
+                }
+                var nextType = input.type === 'password' ? 'text' : 'password';
+                input.type = nextType;
+                toggleButton.classList.toggle('is-visible', nextType === 'text');
+                toggleButton.setAttribute('aria-label', nextType === 'text' ? 'Hide password' : 'Show password');
+            });
+        });
+    </script>
+    {% block extra_auth_scripts %}{% endblock %}
 </body>
 </html>
