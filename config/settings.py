@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import dj_database_url
 
@@ -76,6 +77,13 @@ ASGI_APPLICATION = 'config.asgi.application'
 database_url = os.environ.get("DATABASE_URL", "").strip()
 if not database_url:
     raise RuntimeError("DATABASE_URL must be set for MySQL deployment.")
+
+database_host = (urlparse(database_url).hostname or "").strip().lower()
+if os.getenv("RENDER") == "true" and database_host in {"127.0.0.1", "localhost"}:
+    raise RuntimeError(
+        "Render cannot connect to a local database at 127.0.0.1 or localhost. "
+        "Set DATABASE_URL to a remote database server."
+    )
 
 DATABASES = {
     'default': dj_database_url.parse(
