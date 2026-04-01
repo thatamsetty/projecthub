@@ -1,12 +1,11 @@
 import os
 from pathlib import Path
-from urllib.parse import urlparse
-import pymysql
-pymysql.install_as_MySQLdb()
 
+try:
+    import dj_database_url
+except ImportError:  # pragma: no cover
+    dj_database_url = None
 from dotenv import load_dotenv
-
-
 
 load_dotenv()
 
@@ -14,8 +13,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'unsafe-dev-key')
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') if host.strip()]
+render_hostname = os.getenv('RENDER_EXTERNAL_HOSTNAME', '').strip()
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
+
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+if render_hostname:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{render_hostname}')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -69,54 +75,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
-
-
-def build_database_config():
-    database_url = os.getenv('DATABASE_URL', '')
-
-    # PostgreSQL
-    if database_url.startswith('postgres'):
-        parsed = urlparse(database_url)
-        return {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': parsed.path.lstrip('/'),
-            'USER': parsed.username or '',
-            'PASSWORD': parsed.password or '',
-            'HOST': parsed.hostname or 'localhost',
-            'PORT': parsed.port or 5432,
-            'CONN_MAX_AGE': 600,
-            'OPTIONS': {'sslmode': 'require'} if not DEBUG else {},
-        }
-
-    # MySQL ✅
-    if database_url.startswith('mysql'):
-        parsed = urlparse(database_url)
-        return {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': parsed.path.lstrip('/'),
-            'USER': parsed.username or 'root',
-            'PASSWORD': parsed.password or '',
-            'HOST': parsed.hostname or '127.0.0.1',
-            'PORT': parsed.port or '3306',
-            'CONN_MAX_AGE': 600,
-        }
-
-    # SQLite fallback
-    return {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+def _sqlite_default_url():
+    return f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}"
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'projecthub_db',
-        'USER': 'root',
-        'PASSWORD': 'Thrinethra@123#',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-    }
+    'default': (
+        dj_database_url.config(
+            default=os.getenv('DATABASE_URL', _sqlite_default_url()),
+            conn_max_age=600,
+            ssl_require=not DEBUG,
+        )
+        if dj_database_url is not None
+        else {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    )
 }
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
