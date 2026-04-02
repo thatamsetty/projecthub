@@ -1,7 +1,15 @@
+import logging
+
 import requests
 from django.conf import settings
 
 from apps.projects.models import Notification
+
+logger = logging.getLogger(__name__)
+
+
+class NotificationDeliveryError(Exception):
+    pass
 
 
 class NotificationService:
@@ -9,15 +17,23 @@ class NotificationService:
 
     def _post(self, payload):
         if not settings.BREVO_API_KEY:
-            return {'skipped': True, 'reason': 'BREVO_API_KEY not configured'}
+            logger.error('Brevo email delivery skipped because BREVO_API_KEY is not configured.')
+            raise NotificationDeliveryError('Email service is not configured.')
         headers = {
             'accept': 'application/json',
             'api-key': settings.BREVO_API_KEY,
             'content-type': 'application/json',
         }
-        response = requests.post(self.base_url, headers=headers, json=payload, timeout=10)
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = requests.post(self.base_url, headers=headers, json=payload, timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as exc:
+            response_text = ''
+            if exc.response is not None:
+                response_text = exc.response.text[:500]
+            logger.exception('Brevo API request failed. Status=%s Body=%s', getattr(exc.response, 'status_code', None), response_text)
+            raise NotificationDeliveryError('Unable to send email at this time.') from exc
 
     def create_notification(self, *, user, title, message, notification_type, user_project=None, send_email=False):
         notification = Notification.objects.create(
@@ -34,7 +50,10 @@ class NotificationService:
                 'subject': title,
                 'htmlContent': f'<p>{message}</p>',
             }
-            self._post(payload)
+            try:
+                self._post(payload)
+            except NotificationDeliveryError:
+                logger.warning('Notification email delivery failed for user=%s title=%s', user.pk, title)
         return notification
 
     def send_otp(self, email, otp):

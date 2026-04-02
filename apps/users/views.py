@@ -1,7 +1,11 @@
+import json
+
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods
 
 from apps.projects.models import Notification
 from apps.users.forms import (
@@ -28,6 +32,26 @@ def _validation_error_text(exc):
     return str(exc)
 
 
+def _wants_json(request):
+    content_type = (request.content_type or '').split(';', 1)[0].strip().lower()
+    accept = request.headers.get('Accept', '')
+    x_requested_with = request.headers.get('X-Requested-With', '')
+    return (
+        content_type == 'application/json'
+        or 'application/json' in accept
+        or x_requested_with == 'XMLHttpRequest'
+    )
+
+
+def _json_payload(request):
+    if (request.content_type or '').split(';', 1)[0].strip().lower() != 'application/json':
+        return None
+    try:
+        return json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        raise ValidationError('Request body must contain valid JSON.')
+
+
 def home_redirect_view(request):
     if request.user.is_authenticated:
         if request.user.is_staff:
@@ -36,16 +60,55 @@ def home_redirect_view(request):
     return redirect('/auth/login/')
 
 
+@require_http_methods(['GET', 'POST'])
 def register_view(request):
-    form = RegisterForm(request.POST or None)
+    is_json_request = _wants_json(request)
+    form_input = None
+    if request.method == 'POST':
+        if is_json_request:
+            try:
+                form_input = _json_payload(request) or {}
+            except ValidationError as exc:
+                return JsonResponse({'success': False, 'message': _validation_error_text(exc)}, status=400)
+        else:
+            form_input = request.POST
+
+    form = RegisterForm(form_input or None)
     if request.method == 'POST' and form.is_valid():
         try:
             UserAuthService().initiate_registration(form.cleaned_data)
             request.session[REGISTER_FIRST_NAME_SESSION_KEY] = form.cleaned_data.get('first_name', '').strip()
             request.session[REGISTER_LAST_NAME_SESSION_KEY] = form.cleaned_data.get('last_name', '').strip()
+            if is_json_request:
+                return JsonResponse(
+                    {
+                        'success': True,
+                        'message': 'OTP sent successfully.',
+                        'data': {
+                            'email': form.cleaned_data['email'],
+                            'verify_otp_url': '/auth/verify-otp/',
+                            'otp_expires_in_seconds': 600,
+                        },
+                    },
+                    status=201,
+                )
             return redirect('/auth/verify-otp/?email=' + form.cleaned_data['email'])
         except ValidationError as exc:
+            if is_json_request:
+                return JsonResponse({'success': False, 'message': _validation_error_text(exc)}, status=400)
             form.add_error(None, _validation_error_text(exc))
+    elif request.method == 'POST' and is_json_request:
+        errors = {}
+        for field_name, field_errors in form.errors.items():
+            errors[field_name] = [str(error) for error in field_errors]
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Please correct the highlighted fields.',
+                'errors': errors,
+            },
+            status=400,
+        )
     return render(request, 'user/register.html', {'form': form})
 
 

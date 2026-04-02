@@ -2,12 +2,13 @@ import random
 from datetime import timedelta
 
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 
 from apps.users.models import OTPRequest, User
-from services.notification_service import NotificationService
+from services.notification_service import NotificationDeliveryError, NotificationService
 
 
 class UserAuthService:
@@ -21,16 +22,20 @@ class UserAuthService:
 
         otp = f"{random.randint(100000, 999999)}"
         OTPRequest.objects.filter(email=validated_data['email'], purpose='register', is_verified=False).delete()
-        OTPRequest.objects.create(
+        otp_request = OTPRequest.objects.create(
             email=validated_data['email'],
             otp_code=otp,
             purpose='register',
             username=validated_data['username'],
             mobile=validated_data['mobile'],
-            password=validated_data['password'],
+            password=make_password(validated_data['password']),
             expires_at=timezone.now() + timedelta(minutes=10),
         )
-        NotificationService().send_otp(validated_data['email'], otp)
+        try:
+            NotificationService().send_otp(validated_data['email'], otp)
+        except NotificationDeliveryError as exc:
+            otp_request.delete()
+            raise ValidationError('We could not send the OTP email right now. Please try again in a moment.') from exc
         return otp
 
     def complete_registration(self, email, otp_code):
@@ -38,12 +43,13 @@ class UserAuthService:
         if not otp_request or otp_request.is_expired() or otp_request.otp_code != otp_code:
             raise ValidationError('Invalid or expired OTP.')
 
-        user = User.objects.create_user(
+        user = User(
             username=otp_request.username,
             email=otp_request.email,
             mobile=otp_request.mobile,
             password=otp_request.password,
         )
+        user.save()
         otp_request.is_verified = True
         otp_request.save(update_fields=['is_verified'])
         return user
@@ -69,13 +75,17 @@ class UserAuthService:
 
         otp = f"{random.randint(100000, 999999)}"
         OTPRequest.objects.filter(email=email, purpose='password_reset', is_verified=False).delete()
-        OTPRequest.objects.create(
+        otp_request = OTPRequest.objects.create(
             email=email,
             otp_code=otp,
             purpose='password_reset',
             expires_at=timezone.now() + timedelta(minutes=10),
         )
-        NotificationService().send_otp(email, otp)
+        try:
+            NotificationService().send_otp(email, otp)
+        except NotificationDeliveryError as exc:
+            otp_request.delete()
+            raise ValidationError('We could not send the OTP email right now. Please try again in a moment.') from exc
         return otp
 
     def verify_password_reset_otp(self, email, otp_code):
