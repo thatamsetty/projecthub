@@ -15,6 +15,14 @@ class NotificationDeliveryError(Exception):
 class NotificationService:
     base_url = 'https://api.brevo.com/v3/smtp/email'
 
+    def _sender(self):
+        sender_email = (settings.BREVO_SENDER_EMAIL or '').strip()
+        sender_name = (settings.BREVO_SENDER_NAME or 'ProjectHub').strip()
+        if not sender_email:
+            logger.error('Brevo email delivery skipped because BREVO_SENDER_EMAIL is not configured.')
+            raise NotificationDeliveryError('Email service is not configured.')
+        return {'name': sender_name, 'email': sender_email}
+
     def _post(self, payload):
         if not settings.BREVO_API_KEY:
             logger.error('Brevo email delivery skipped because BREVO_API_KEY is not configured.')
@@ -26,13 +34,29 @@ class NotificationService:
         }
         try:
             response = requests.post(self.base_url, headers=headers, json=payload, timeout=10)
+            logger.info(
+                'Brevo API response received. Status=%s RecipientCount=%s Subject=%s',
+                response.status_code,
+                len(payload.get('to', [])),
+                payload.get('subject'),
+            )
             response.raise_for_status()
             return response.json()
         except requests.RequestException as exc:
             response_text = ''
+            response_status = None
             if exc.response is not None:
+                response_status = exc.response.status_code
                 response_text = exc.response.text[:500]
-            logger.exception('Brevo API request failed. Status=%s Body=%s', getattr(exc.response, 'status_code', None), response_text)
+            logger.exception('Brevo API request failed. Status=%s Body=%s', response_status, response_text)
+            if response_status == 401:
+                raise NotificationDeliveryError(
+                    'Email service authorization failed. Check the Brevo API key and authorized IP settings.'
+                ) from exc
+            if response_status == 400:
+                raise NotificationDeliveryError(
+                    'Email service rejected the request. Check the sender configuration and payload.'
+                ) from exc
             raise NotificationDeliveryError('Unable to send email at this time.') from exc
 
     def create_notification(self, *, user, title, message, notification_type, user_project=None, send_email=False):
@@ -45,7 +69,7 @@ class NotificationService:
         )
         if send_email and user.email:
             payload = {
-                'sender': {'email': settings.BREVO_SENDER_EMAIL, 'name': settings.BREVO_SENDER_NAME},
+                'sender': self._sender(),
                 'to': [{'email': user.email}],
                 'subject': title,
                 'htmlContent': f'<p>{message}</p>',
@@ -58,9 +82,9 @@ class NotificationService:
 
     def send_otp(self, email, otp):
         payload = {
-            'sender': {'email': settings.BREVO_SENDER_EMAIL, 'name': settings.BREVO_SENDER_NAME},
+            'sender': self._sender(),
             'to': [{'email': email}],
-            'subject': 'Your ProjectHub OTP',
+            'subject': 'Your OTP Code',
             'htmlContent': f'<p>Your OTP is <strong>{otp}</strong>. It expires in 10 minutes.</p>',
         }
         return self._post(payload)
