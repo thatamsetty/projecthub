@@ -1,11 +1,13 @@
 {% extends 'auth_base.html' %}
 {% block title %}Verify OTP | ProjectHub{% endblock %}
+{% block auth_body_class %}auth-login-body{% endblock %}
+{% block auth_content_class %}auth-login-layout{% endblock %}
 {% block auth_content %}
-<section class="auth-card auth-card-compact" style="--auth-progress-width: 100%;">
-    <div class="auth-card-header">
+<section class="auth-card auth-card-compact login-exact-card" style="--auth-progress-width: 78%;">
+    <div class="auth-card-header login-exact-header">
         <h1>Verify your OTP</h1>
         <p>Enter the six-digit code sent to your email to finish registration and unlock your account.</p>
-        <div class="auth-progress">
+        <div class="auth-progress login-exact-progress">
             <span></span>
         </div>
     </div>
@@ -14,15 +16,13 @@
             {% for error in form.non_field_errors %}{{ error }}{% endfor %}
         </div>
     {% endif %}
-    <form method="post" class="auth-form-grid">
+    <form method="post" class="auth-form-grid auth-exact-form">
         {% csrf_token %}
         <label class="auth-field">
             <span>Email Address</span>
-            <div class="auth-input-wrap">
+            <div class="auth-input-wrap auth-exact-input auth-input-with-icon">
                 <span class="auth-input-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2v.2l8 5.2 8-5.2V8l-8 5.2L4 8Z"></path>
-                    </svg>
+                    <i class="bi bi-at"></i>
                 </span>
                 {{ form.email }}
             </div>
@@ -31,11 +31,9 @@
         <label class="auth-field">
             <span>OTP Code</span>
             <div class="auth-otp-grid">
-                <div class="auth-input-wrap">
+                <div class="auth-input-wrap auth-exact-input auth-input-with-icon">
                     <span class="auth-input-icon">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 1 1 4 0v2Z"></path>
-                        </svg>
+                        <i class="bi bi-shield-lock"></i>
                     </span>
                     {{ form.otp_code }}
                 </div>
@@ -43,9 +41,9 @@
             </div>
             {% for error in form.otp_code.errors %}<small class="auth-field-error">{{ error }}</small>{% endfor %}
         </label>
-        <button class="auth-submit-btn" type="submit">Verify OTP <span aria-hidden="true">&rarr;</span></button>
+        <button class="auth-submit-btn login-exact-submit" type="submit">Verify OTP <span aria-hidden="true">&rarr;</span></button>
     </form>
-    <p class="auth-inline-link"><a href="/auth/register/">Back to registration</a></p>
-    <p class="auth-switch-copy">Already verified? <a href="/auth/login/">Sign in</a></p>
+    <p class="auth-inline-link login-exact-forgot"><a href="/auth/register/">Back to registration</a></p>
+    <p class="auth-switch-copy login-exact-switch">Already verified? <a href="/auth/login/">Sign in</a></p>
 </section>
 {% endblock %}
